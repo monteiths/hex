@@ -14,15 +14,15 @@
 </main>
 <script>
 "use strict";
-const names=["3 colours","9 colours","16 colours","128 colours","Binary RGB","Hexadecimal"];
-const headings=["Level 1 · Three colours","Level 2 · Nine colours","Level 3 · Sixteen colours","Level 4 · 128 colours","Level 5 · Describe a colour in binary","Level 6 · Translate binary into hexadecimal"];
+const names=["3 colours","9 colours","16 colours","128 colours","Binary RGB","Hexadecimal","Colour maker"];
+const headings=["Level 1 · Three colours","Level 2 · Nine colours","Level 3 · Sixteen colours","Level 4 · 128 colours","Level 5 · Describe a colour in binary","Level 6 · Translate binary into hexadecimal","Level 7 · Make your own colour"];
 const intros=[
 "Start with just three colours. Click one to enlarge it. Ask the class to describe it in words.",
 "Now there are nine colours. Select one: can everyone agree on its name?",
 "Sixteen colours. Which are blue, teal, turquoise, purple or violet? Are descriptions still precise?",
 "Now there are 128 colours. Try telling someone exactly which colour you selected without pointing at it.",
 "Computers do not store names such as ‘bright blue’. They store a number for red, a number for green, and a number for blue. Each number uses 8 binary digits.",
-"Twenty-four binary digits are accurate, but cumbersome to read aloud. Group the bits into fours and convert each group into one hexadecimal digit."
+"Twenty-four binary digits are accurate, but cumbersome to read aloud. Group the bits into fours and convert each group into one hexadecimal digit.","Now make your own colour by entering binary or hexadecimal RGB values."
 ];
 const hints=[
 "Ask: ‘What colour is this?’ Then: ‘Would everyone call it the same thing?’",
@@ -30,28 +30,28 @@ const hints=[
 "Ask: ‘Would “light green” identify one precise square?’",
 "Ask: ‘Could we invent 128 unambiguous names? What if there were millions?’",
 "Ask: ‘How many bits are used for each channel? How many for the whole colour?’",
-"Ask: ‘Is #RRGGBB easier to copy and communicate than 24 individual bits?’"
+"Ask: ‘Is #RRGGBB easier to copy and communicate than 24 individual bits?’","Challenge: make white with 11111111 in every binary channel, or FF in every hex channel."
 ];
 const basic=[[255,0,0],[0,255,0],[0,0,255]];
 const nine=[[255,0,0],[0,255,0],[0,0,255],[255,255,0],[255,0,255],[0,255,255],[255,128,0],[128,0,255],[128,128,128]];
 const sixteen=[[255,0,0],[0,255,0],[0,0,255],[255,255,0],[255,0,255],[0,255,255],[255,128,0],[128,0,255],[128,128,128],[0,128,128],[128,0,0],[0,128,0],[0,0,128],[255,192,203],[180,255,120],[255,255,255]];
 // 128 distinct RGB colours sampled from a 4 × 4 × 8 channel grid.
 const many=[];for(const r of [0,85,170,255])for(const g of [0,85,170,255])for(const b of [0,36,73,109,146,182,219,255])many.push([r,g,b]);
-const palettes=[basic,nine,sixteen,many,many,many];
-let level=0,selection=0;
+const palettes=[basic,nine,sixteen,many,many,many,[]];
+let level=0,selection=0,makerMode="binary";
 const el=id=>document.getElementById(id);
 const rgb=c=>"rgb("+c.join(",")+")";
 const binary=n=>n.toString(2).padStart(8,"0");
 const hex=n=>n.toString(16).toUpperCase().padStart(2,"0");
-function select(i){selection=i;const c=palettes[level][i];el("big").style.background=rgb(c);document.querySelectorAll(".swatch").forEach((b,j)=>{b.classList.toggle("chosen",j===i);b.setAttribute("aria-pressed",j===i?"true":"false")});if(level>=4)showCode(c)}
+function select(i){selection=i;const c=palettes[level][i];el("big").style.background=rgb(c);document.querySelectorAll(".swatch").forEach((b,j)=>{b.classList.toggle("chosen",j===i);b.setAttribute("aria-pressed",j===i?"true":"false")});if(level>=4&&level<6)showCode(c)}
 function showCode(c){
 const b=c.map(binary),h=c.map(hex);
 let out='<div class="codebox"><h3>RGB: three 8-bit binary numbers</h3><div class="channels">';
 ["Red","Green","Blue"].forEach((name,i)=>{out+='<div class="channel '+name.toLowerCase()+'"><b>'+name+'</b><strong>'+c[i]+' / 255</strong><div class="bits">'+b[i].slice(0,4)+' '+b[i].slice(4)+'</div><small>8 bits</small></div>'});
 out+='</div><p class="sum" style="color:white">8 + 8 + 8 = 24 bits</p></div>';
-if(level===5){out+='<p><strong>Read the channels separately:</strong> red '+c[0]+', green '+c[1]+', blue '+c[2]+'. Each decimal value is stored as its own 8-bit sequence.</p>'}
+if(level===4){out+='<p><strong>Read the channels separately:</strong> red '+c[0]+', green '+c[1]+', blue '+c[2]+'. Each decimal value is stored as its own 8-bit sequence.</p>'}
 if(level===5){out+='<p class="muted">At the next level we will shorten these 24 binary digits to six hexadecimal digits.</p>'}
-if(level===5){el("code").innerHTML=out;return}
+if(level===4){el("code").innerHTML=out;return}
 out+='<h3>Convert each group of four bits into one hex digit</h3><div class="nibbles">';
 for(let i=0;i<3;i++)for(let j=0;j<2;j++){const bits=b[i].slice(j*4,j*4+4);out+='<div class="nibble"><b>'+bits+'</b><span>↓ '+parseInt(bits,2).toString(16).toUpperCase()+'</span></div>'}
 out+='</div><p class="sum">#'+h.join("")+'</p><p>For example, each 8-bit channel becomes <strong>two hex digits</strong>. Three channels × two digits = <strong>six hexadecimal digits</strong>, written as <strong>#RRGGBB</strong>.</p>';
@@ -62,17 +62,46 @@ function render(){
 el("levels").innerHTML=names.map((n,i)=>'<button type="button" data-level="'+i+'" class="'+(i===level?"active":"")+'" aria-current="'+(i===level?"step":"false")+'">'+(i+1)+' · '+n+'</button>').join("");
 document.querySelectorAll("[data-level]").forEach(b=>b.addEventListener("click",()=>setLevel(Number(b.dataset.level))));
 el("heading").textContent=headings[level];el("intro").textContent=intros[level];el("teaching").textContent=hints[level];
-el("question").textContent=level<4?"How would you describe this colour in words?":level===4?"What exact RGB binary sequence describes this colour?":"How can we make this 24-bit colour code easier to communicate?";
-el("guidance").textContent=level<4?"Click a coloured square to make it larger. Discuss before moving on.":"Select any colour to see its exact RGB code and the worked conversion.";
-el("next").textContent=level===5?"Return to level 1":"Next level →";
-const p=palettes[level];el("swatches").style.setProperty("--cols",level===0?"3":level===1?"3":level===2?"8":"16");
+el("question").textContent=level<4?"How would you describe this colour in words?":level===4?"What exact RGB binary sequence describes this colour?":level===5?"How can we make this 24-bit colour code easier to communicate?":"Can you make a colour with binary or hexadecimal?";
+el("guidance").textContent=level<4?"Click a coloured square to make it larger. Discuss before moving on.":level<6?"Select any colour to see its exact RGB code and the worked conversion.":"Enter three 8-bit binary values or three two-digit hex values.";
+el("next").textContent=level===6?"Return to level 1":"Next level →";
+const p=palettes[level];el("swatches").classList.toggle("hidden",level===6);el("new").classList.toggle("hidden",level===6);el("swatches").style.setProperty("--cols",level===0?"3":level===1?"3":level===2?"8":"16");
 el("swatches").innerHTML=p.map((c,i)=>'<button class="swatch" type="button" data-colour="'+i+'" style="background:'+rgb(c)+'" aria-label="Colour '+(i+1)+'" aria-pressed="false"></button>').join("");
 document.querySelectorAll("[data-colour]").forEach(b=>b.addEventListener("click",()=>select(Number(b.dataset.colour))));
 el("code").classList.toggle("hidden",level<4);
-selection=Math.min(selection,p.length-1);select(selection);
+if(level===6){renderMaker();return;}selection=Math.min(selection,p.length-1);select(selection);
+}
+
+function renderMaker(){
+ const code=el("code");
+ code.innerHTML='<h3>Build an RGB colour</h3><div class="actions"><button type="button" id="modeBinary">Binary (8 bits each)</button><button type="button" id="modeHex">Hexadecimal (2 digits each)</button></div><p>Enter the red, green and blue channel values. Spaces are optional.</p><div class="channels" id="makerInputs"></div><div class="actions"><button type="button" class="primary" id="makeColour">Make colour</button><button type="button" id="whitePreset">Make white</button><button type="button" id="blackPreset">Make black</button><button type="button" id="randomPreset">Surprise me</button></div><p id="makerError" role="alert" style="color:#a12e31;font-weight:750"></p><div id="makerResult" class="note"></div>';
+ el("modeBinary").classList.toggle("primary",makerMode==="binary");
+ el("modeHex").classList.toggle("primary",makerMode==="hex");
+ const defaults=makerMode==="binary"?["1111 1111","1111 1111","1111 1111"]:["FF","FF","FF"];
+ el("makerInputs").innerHTML=["Red","Green","Blue"].map((n,i)=>'<label class="channel '+n.toLowerCase()+'"><strong>'+n+'</strong><input aria-label="'+n+' '+makerMode+'" id="maker'+i+'" style="width:100%;font:700 1.1rem ui-monospace,monospace;text-align:center;padding:10px;margin-top:12px;border:2px solid #c7b4e0;border-radius:8px" maxlength="12" value="'+defaults[i]+'"></label>').join("");
+ el("modeBinary").onclick=()=>{makerMode="binary";renderMaker()};
+ el("modeHex").onclick=()=>{makerMode="hex";renderMaker()};
+ el("makeColour").onclick=makeColour;
+ el("whitePreset").onclick=()=>setMakerValues([255,255,255]);
+ el("blackPreset").onclick=()=>setMakerValues([0,0,0]);
+ el("randomPreset").onclick=()=>setMakerValues(Array.from({length:3},()=>Math.floor(Math.random()*256)));
+ makeColour();
+}
+function setMakerValues(values){values.forEach((v,i)=>el("maker"+i).value=makerMode==="binary"?binary(v).replace(/(.{4})/,"$1 "):hex(v));makeColour()}
+function makeColour(){
+ const values=[];
+ for(let i=0;i<3;i++){
+  const cleaned=el("maker"+i).value.replace(/\\s/g,"");
+  const valid=makerMode==="binary"?/^[01]{8}$/.test(cleaned):/^[0-9a-fA-F]{2}$/.test(cleaned);
+  if(!valid){el("makerError").textContent=makerMode==="binary"?"Each channel needs exactly 8 binary digits (0 or 1).":"Each channel needs exactly 2 hexadecimal digits (0–9 or A–F).";el("makerResult").textContent="";return}
+  values.push(parseInt(cleaned,makerMode==="binary"?2:16));
+ }
+ el("makerError").textContent="";
+ el("big").style.background=rgb(values);
+ el("makerResult").innerHTML='<strong>Your colour:</strong> RGB ('+values.join(", ")+')<p><strong>Binary:</strong> '+values.map(v=>binary(v).replace(/(.{4})/,"$1 ")).join(" &nbsp; ")+'</p><p><strong>Hex:</strong> #'+values.map(hex).join("")+' ('+values.map(hex).join(" ") +')</p>';
 }
 function setLevel(n){level=n;selection=0;render()}
 el("new").addEventListener("click",()=>select((selection+1)%palettes[level].length));
-el("next").addEventListener("click",()=>setLevel((level+1)%6));
+el("next").addEventListener("click",()=>setLevel((level+1)%7));
 render();
 </script></body></html>
