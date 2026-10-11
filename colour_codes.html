@@ -91,7 +91,7 @@ function setMakerValues(values){values.forEach((v,i)=>el("maker"+i).value=makerM
 function makeColour(){
  const values=[];
  for(let i=0;i<3;i++){
-  const cleaned=el("maker"+i).value.replace(/\\s/g,"");
+  const cleaned=el("maker"+i).value.replace(/\s/g,"");
   const valid=makerMode==="binary"?/^[01]{8}$/.test(cleaned):/^[0-9a-fA-F]{2}$/.test(cleaned);
   if(!valid){el("makerError").textContent=makerMode==="binary"?"Each channel needs exactly 8 binary digits (0 or 1).":"Each channel needs exactly 2 hexadecimal digits (0–9 or A–F).";el("makerResult").textContent="";return}
   values.push(parseInt(cleaned,makerMode==="binary"?2:16));
