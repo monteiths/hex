@@ -82,6 +82,7 @@ function renderMaker(){
  el("modeBinary").onclick=()=>{makerMode="binary";renderMaker()};
  el("modeHex").onclick=()=>{makerMode="hex";renderMaker()};
  el("makeColour").onclick=makeColour;
+ ["maker0","maker1","maker2"].forEach(id=>el(id).addEventListener("input",()=>{el("makerResult").textContent="Ready to see your colour? Press Make colour.";el("makerError").textContent="";}));
  el("whitePreset").onclick=()=>setMakerValues([255,255,255]);
  el("blackPreset").onclick=()=>setMakerValues([0,0,0]);
  el("randomPreset").onclick=()=>setMakerValues(Array.from({length:3},()=>Math.floor(Math.random()*256)));
